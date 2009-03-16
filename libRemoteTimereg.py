@@ -11,6 +11,7 @@
 
 import urllib, urllib2, urlparse
 from xml.etree import ElementTree as ET
+from xml.parsers.expat import ExpatError
 
 ACHIEVO_ENCODING = "ISO-8859-15"
 
@@ -98,7 +99,7 @@ class RemoteTimereg:
         try:
             return ET.fromstring(page)
         except ExpatError:
-            debug(page.decode(ACHIEVO_ENCODING))
+            print page.decode(ACHIEVO_ENCODING)
             raise ExpatError, page.decode(ACHIEVO_ENCODING)
 
     def whoami(self):
@@ -113,7 +114,7 @@ class RemoteTimereg:
         return elogin
     
     def projects(self):
-        projects = self._urlDispatch("prova")
+        projects = self._urlDispatch("report")
         return projects
     
     def hours(self, projectid, from_date=None, to_date=None):
@@ -123,7 +124,7 @@ class RemoteTimereg:
             params["from_date"] = from_date
         if to_date:
             params["to_date"] = to_date
-        hours = self._urlDispatch("prova", **params)
+        hours = self._urlDispatch("report", **params)
         return hours
 
 if __name__ == '__main__':
