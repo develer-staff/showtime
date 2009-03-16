@@ -126,15 +126,3 @@ class RemoteTimereg:
             params["to_date"] = to_date
         hours = self._urlDispatch("report", **params)
         return hours
-
-if __name__ == '__main__':
-    import parse_xml_info
-    r = RemoteTimereg()
-    r.login("http://localhost/achievo/", "duplo", "duplo")
-    projects = parse_xml_info.parse_projects(r.projects())
-    for id, project in projects.items():
-        print id, project
-        hours = parse_xml_info.parse_hours(r.hours(id))
-        for hour in hours:
-            print hour
-    
