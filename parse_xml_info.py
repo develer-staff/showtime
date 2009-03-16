@@ -11,19 +11,21 @@
 
 from xml.etree import ElementTree as ET
 
-def parse_projects(etree):
+import datetime
+
+def parseProjects(etree):
     projects = {}
     for element in etree:
         projects[element.get("id")] = element.get("name")
     return projects
 
-def parse_hours(etree):
+def parseHours(etree):
     hours = []
     for element in etree:
         hours.append(
             {
                 "date": element.get("date"),
-                "time": element.get("time"),
+                "time": "%d:%s" %(int(element.get("time")) / 60, datetime.time(minute=int(element.get("time")) % 60).strftime("%M")),
                 "remark": element.get("remark"),
                 "activity": element.get("activity"),
                 "phase": element.get("phase"),
