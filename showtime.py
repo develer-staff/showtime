@@ -10,9 +10,11 @@
 #
 
 import datetime
+import base64
 
 
 ## CGI modules
+import os
 import cgi
 import cgitb
 cgitb.enable()
@@ -53,8 +55,6 @@ YEARS = (
     2009,
 )
 
-USER = "duplo"
-PASSWORD = "duplo"
 ACHIEVOURI = "http://localhost/achievo/"
 
 ########################################
@@ -231,9 +231,24 @@ TPL = """
 <html>
 <head>
     <title>Project hours registration report</title>
+    <style>
+        tr.header_row {
+            background-color: 001090;
+            color: FFFFFF
+        }
+        tr.row1 {
+            background-color: 00FFFF
+        }
+        tr.row2 {
+            background-color: 00E0FF
+        }
+    </style>
 </head>
 <body>
     <img src="http://www.develer.com/website/images/develer-logo-white-2.png" />
+    <div>
+        Utente: {{ user }}
+    </div>
     <form method='post' action='showtime.py'>
         <select name='projectid'>
         {% for pid, pname in projects.items %}
@@ -274,7 +289,34 @@ TPL = """
 ## Main function ##
 ###################
 
+def p(msg):
+    if isinstance(msg, unicode):
+        msg = msg.encode('utf-8')
+    print msg
+
 def main():
+    print "Content-Type: text/html; charset=utf-8"
+    print # blank line, end of headers
+    # lo standard CGI prevede che il server possa omettere l'header
+    # HTTP_AUTHORIZATION se lo desidera, ovviamente Apache lo desidera :) Per
+    # avere acesso alla password dell'utente è necessario ricorrere ad un
+    # "trucco" riportato in vari siti e che coinvolge mod_rewrite; il trucco
+    # consiste nel usare una regola di rewriting che non altera il path ma che
+    # aggiunge una variabile di ambiente alla richiesta, ovviamente il valore
+    # della variabile d'ambiente è copiato da HTTP_AUTHORIZATION.
+    # Esempio:
+    # RewriteEngine on
+	# RewriteCond %{HTTP:Authorization} (.+)
+	# RewriteRule showtime.py$ - [E=HTTP_CGI_AUTH:%1]	
+    try:
+        USER, PASSWORD = base64.b64decode(os.environ['HTTP_CGI_AUTH'][6:]).split(':')
+    except KeyError:
+        p(u"Il web server non è configurato correttamente. Propagare le informazioni di autenticazione nella variabile HTTP_CGI_AUTH")
+        return
+    except ValueError:
+        p(u"Header di autenticazione malformato. L'applicazione gestisce solo l'autenticazione basic.")
+        return
+        
     settings.configure(TEMPLATE_DEBUG = True)
     remote = RemoteTimereg()
     remote.login(ACHIEVOURI, USER, PASSWORD)
@@ -310,10 +352,9 @@ def main():
         'hours': hours,
         'total_time': total_time,
         'show_table': show_table,
+        'user': USER,
     })
-    print "Content-Type: text/html"     # HTML is following
-    print                               # blank line, end of headers    
-    print tpl.render(ctx)
+    p(tpl.render(ctx))
 
 ###################
 
