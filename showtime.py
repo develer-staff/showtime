@@ -40,13 +40,14 @@ def main():
         from_date = datetime.date(int(form["year"].value), int(form["month"].value), 1)
         to_date = from_date + datetime.timedelta(days=31)
         to_date = to_date - datetime.timedelta(days=to_date.day+1)
-        hours = parse_xml_info.parseHours(remote.hours(form["projectid"].value,
+        hours, total_time = parse_xml_info.parseHours(remote.hours(form["projectid"].value,
             from_date.strftime("%Y-%m-%d"), to_date.strftime("%Y-%m-%d")))
     else:
         show_table = False
         selected_month = datetime.date.today().month
         selected_year = datetime.date.today().year
         hours = None
+        total_time = None
     tpl = Template(TPL)
     ctx = Context({
         'projects': projects,
@@ -56,6 +57,7 @@ def main():
         'months': MONTHS,
         'years': YEARS,
         'hours': hours,
+        'total_time': total_time,
         'show_table': show_table,
     })
     print "Content-Type: text/html"     # HTML is following
@@ -92,10 +94,11 @@ TPL = """
     </form>
     {% if show_table %}
         <table>
-            <tr><th>Data</th><th>Utente</th><th>Descrizione</th><th>Ore</th></tr>
+            <tr class="header_row"><th>Data</th><th>Utente</th><th>Descrizione</th><th>Ore</th></tr>
             {% for hour in hours %}
-            <tr><td>{{ hour.date }}</td><td>{{ hour.user }}</td><td>{{ hour.remark }}</td><td>{{ hour.time }}</td></tr>
+            <tr class="{% cycle 'row1' 'row2' %}"><td>{{ hour.date }}</td><td>{{ hour.user }}</td><td>{{ hour.remark }}</td><td>{{ hour.time }}</td></tr>
             {% endfor %}
+            <tr class="total_row"><th colspan=3>Totale</th><td>{{ total_time }}</td></tr>
         </table>
     {% endif %}
 </body>

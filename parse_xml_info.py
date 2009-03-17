@@ -21,6 +21,7 @@ def parseProjects(etree):
 
 def parseHours(etree):
     hours = []
+    total_time = 0
     for element in etree:
         hours.append(
             {
@@ -32,4 +33,5 @@ def parseHours(etree):
                 "user": element.get("user"),
             }
         )
-    return hours
+        total_time += int(element.get("time"))
+    return hours, "%d:%s" % (total_time / 60, datetime.time(minute=total_time % 60).strftime("%M"))
