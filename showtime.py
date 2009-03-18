@@ -27,6 +27,9 @@ from django.template import Template, Context
 from xml.etree import ElementTree as ET
 from xml.parsers.expat import ExpatError
 
+## modules for work with csv
+import csv
+import cStringIO as StringIO
 
 ########################################
 ## Definition of the needed constants ##
@@ -228,7 +231,7 @@ class RemoteTimereg:
 TPL = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="it">
 <head>
-    <title>Project hours registration report</title>
+    <title>Report delle ore registrate</title>
     <style>
         tr.header_row {
             background-color: #4169e1;
@@ -375,8 +378,6 @@ def p(msg):
     print msg
 
 def main():
-    print "Content-Type: text/html; charset=utf-8"
-    print # blank line, end of headers
     # lo standard CGI prevede che il server possa omettere l'header
     # HTTP_AUTHORIZATION se lo desidera, ovviamente Apache lo desidera :) Per
     # avere acesso alla password dell'utente è necessario ricorrere ad un
@@ -391,9 +392,13 @@ def main():
     try:
         USER, PASSWORD = base64.b64decode(os.environ['HTTP_CGI_AUTH'][6:]).split(':')
     except KeyError:
+        print "Content-Type: text/html; charset=utf-8"
+        print # blank line, end of headers
         p(u"Il web server non è configurato correttamente. Propagare le informazioni di autenticazione nella variabile HTTP_CGI_AUTH")
         return
     except ValueError:
+        print "Content-Type: text/html; charset=utf-8"
+        print # blank line, end of headers
         p(u"Header di autenticazione malformato. L'applicazione gestisce solo l'autenticazione basic.")
         return
         
@@ -433,7 +438,22 @@ def main():
         total_time = None
 
     if 'action' in form and form['action'].value == "CSV":
-        pass
+        string = StringIO.StringIO()
+        writer = csv.writer(string)
+        writer.writerow(["Data", "Utente", "Descrizione", "Ore"])
+        for hour in hours:
+            time = ""
+            if hour["time"]["hours"] > 0:
+                time += "%dh" % hour["time"]["hours"]
+            if hour["time"]["minutes"] > 0:
+                if len(time) > 0:
+                    time += " "
+                time += "%dm" % hour["time"]["minutes"]
+            writer.writerow([hour["date"].strftime("%d %b %Y"), hour["user"], hour["remark"], time])
+        print "Content-Type: text/csv; charset=utf-8"
+        print "Content-Disposition: attachment; filename=\"develer-%s-%s.csv\"" % (projects[selected_project],from_date.strftime("%b-%Y"))
+        print # blank line, end of headers
+        print string.getvalue()
     else:
         tpl = Template(TPL)
         ctx = Context({
@@ -447,6 +467,8 @@ def main():
             'total_time': total_time,
             'user': USER,
         })
+        print "Content-Type: text/html; charset=utf-8"
+        print # blank line, end of headers
         p(tpl.render(ctx))
 
 ###################
