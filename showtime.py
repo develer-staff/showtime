@@ -231,14 +231,17 @@ TPL = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3
     <title>Project hours registration report</title>
     <style>
         tr.header_row {
-            background-color: #001090;
+            background-color: #4169e1;
             color: white;
         }
         tr.row1 {
-            background-color: #0ff;
+            background-color: #EEEEEE;
         }
         tr.row2 {
-            background-color: #00E0FF;
+            background-color: #cccccc;
+        }
+        tr.total_row td {
+            background-color: #f4a460
         }
         #header {
             margin-bottom: 20px;
@@ -379,15 +382,20 @@ def main():
         selected_project = form['projectid'].value
     else:
         selected_project = None
+
     if 'projectid' in form and 'month' in form and 'year' in form:
         selected_month = int(form["month"].value)
         selected_year = int(form["year"].value)
-        from_date = date(int(form["year"].value), int(form["month"].value), 1)
+    else:
+        selected_month = date.today().month
+        selected_year = date.today().year
+
+    if selected_project and selected_month and selected_year:
+        from_date = date(selected_year, selected_month, 1)
         to_date = from_date + timedelta(days=31)
         to_date = to_date - timedelta(days=to_date.day)
         hours = parseHours(remote.hours(form["projectid"].value,
             from_date.strftime("%Y-%m-%d"), to_date.strftime("%Y-%m-%d")))
-        
         total_time = timedelta(seconds = 0)
         def ctime(t):
             secs = t.days * 3600 * 24 + t.seconds
@@ -397,23 +405,25 @@ def main():
             h['time'] = ctime(h['time'])
         total_time = ctime(total_time)
     else:
-        selected_month = date.today().month
-        selected_year = date.today().year
         hours = None
         total_time = None
-    tpl = Template(TPL)
-    ctx = Context({
-        'projects': projects,
-        'selected_project': selected_project,
-        'selected_month': selected_month,
-        'selected_year': selected_year,
-        'months': MONTHS,
-        'years': YEARS,
-        'hours': hours,
-        'total_time': total_time,
-        'user': USER,
-    })
-    p(tpl.render(ctx))
+
+    if 'action' in form and form['action'].value == "CSV":
+        pass
+    else:
+        tpl = Template(TPL)
+        ctx = Context({
+            'projects': projects,
+            'selected_project': selected_project,
+            'selected_month': selected_month,
+            'selected_year': selected_year,
+            'months': MONTHS,
+            'years': YEARS,
+            'hours': hours,
+            'total_time': total_time,
+            'user': USER,
+        })
+        p(tpl.render(ctx))
 
 ###################
 
