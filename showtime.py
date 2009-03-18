@@ -240,9 +240,6 @@ TPL = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3
         tr.row2 {
             background-color: #cccccc;
         }
-        tr.total_row td {
-            background-color: #f4a460
-        }
         #header {
             margin-bottom: 20px;
         }
@@ -257,6 +254,7 @@ TPL = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3
             font-weight: bold;
         }
         div.form-controls {
+            text-align: right;
             margin-top: 15px;
         }
         td {
@@ -268,16 +266,19 @@ TPL = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3
         .total_row th {
             text-align: right;
         }
-        table {
+        tr.total_row td {
+            background-color: #f4a460
+        }
+        table.hours {
             width: 640px;
         }
-        .c-data, .c-user, .c-time {
+        .c-data {
+            width: 8em
+        }
+        .c-user, .c-time {
             width: 90px;
         }
         .logged-user {
-            margin: 20px 0;
-        }
-        .logged-user span {
             font-weight: bold;
         }
     </style>
@@ -286,37 +287,60 @@ TPL = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3
     <div id="header">
         <img src="https://www.develer.com/pics/develer_logo.png" alt="develer" />
     </div>
-    <div class="logged-user"><span>Utente:</span> {{ user }}</div>
     <form method="get" action="showtime.py">
-        <div>
-            <label for="project">Progetto:</label>
-            <select name="projectid" id="project">
-            {% for pid, pname in projects.items %}
-                <option value="{{ pid }}"{% ifequal pid selected_project %} selected="selected"{% endifequal %}>{{ pname }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div>
-            <label for="month">Mese:</label>
-            <select name="month" id="month">
-            {% for month in months %}
-                <option value="{{ month.0 }}"{% ifequal month.0 selected_month %} selected="selected"{% endifequal %}>{{ month.1 }}</option>
-            {% endfor %}
-            </select>
-            <label for="year">Year:</label>
-            <select name="year" id="year">
-            {% for year in years %}
-                <option value="{{ year }}"{% ifequal year selected_year %} selected="selected"{% endifequal %}>{{ year }}</option>
-            {% endfor %}
-            </select>
-        </div>
-        <div class="form-controls">
-            <input type="submit" name="action" value="Refresh" />
-            <input type="submit" name="action" value="CSV" />        
-        </div>
+        <table>
+            <tr>
+                <td class="logged-user">Utente:</td>
+                <td>{{ user }}</td>
+            </tr>
+            <tr>
+                <td>
+                    <label for="project">Progetto:</label>
+                </td>
+                <td>
+                    <select name="projectid" id="project">
+                    {% for pid, pname in projects.items %}
+                        <option value="{{ pid }}"{% ifequal pid selected_project %} selected="selected"{% endifequal %}>{{ pname }}</option>
+                    {% endfor %}
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label for="year">Anno:</label>
+                </td>
+                <td>
+                    <select name="year" id="year">
+                    {% for year in years %}
+                        <option value="{{ year }}"{% ifequal year selected_year %} selected="selected"{% endifequal %}>{{ year }}</option>
+                    {% endfor %}
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label for="month">Mese:</label>
+                </td>
+                <td>
+                    <select name="month" id="month">
+                    {% for month in months %}
+                        <option value="{{ month.0 }}"{% ifequal month.0 selected_month %} selected="selected"{% endifequal %}>{{ month.1 }}</option>
+                    {% endfor %}
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <div class="form-controls">
+                        <input type="submit" name="action" value="Refresh" />
+                        <input type="submit" name="action" value="CSV" />
+                    </div>
+                </td>
+            </tr>
+        </table>
     </form>
     {% if hours %}
-        <table>
+        <table class="hours">
             <tr class="header_row">
                 <th>Data</th>
                 <th>Utente</th>
