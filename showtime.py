@@ -9,7 +9,7 @@
 # Author: Lorenzo Berni <duplo@develer.com>
 #
 
-import datetime
+from datetime import datetime, date, timedelta
 import base64
 
 
@@ -77,20 +77,18 @@ def parseProjects(etree):
 
 def parseHours(etree):
     hours = []
-    total_time = 0
     for element in etree:
         hours.append(
             {
-                "date": element.get("date"),
-                "time": "%d:%s" %(int(element.get("time")) / 60, datetime.time(minute=int(element.get("time")) % 60).strftime("%M")),
+                "date": datetime.strptime(element.get("date"), "%Y-%m-%d"),
+                "time": timedelta(minutes = int(element.get("time"))),
                 "remark": element.get("remark"),
                 "activity": element.get("activity"),
                 "phase": element.get("phase"),
                 "user": element.get("user"),
             }
         )
-        total_time += int(element.get("time"))
-    return hours, "%d:%s" % (total_time / 60, datetime.time(minute=total_time % 60).strftime("%M"))
+    return hours
 
 ##################################
 
@@ -227,55 +225,110 @@ class RemoteTimereg:
 ## Template definition ##
 #########################
 
-TPL = """
-<html>
+TPL = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="it">
 <head>
     <title>Project hours registration report</title>
     <style>
         tr.header_row {
-            background-color: 001090;
-            color: FFFFFF
+            background-color: #001090;
+            color: white;
         }
         tr.row1 {
-            background-color: 00FFFF
+            background-color: #0ff;
         }
         tr.row2 {
-            background-color: 00E0FF
+            background-color: #00E0FF;
+        }
+        #header {
+            margin-bottom: 20px;
+        }
+        form {
+            margin-bottom: 20px;
+            width: 640px;        
+        }        
+        form div {
+            margin: 5px 0;
+        }
+        label {
+            font-weight: bold;
+        }
+        div.form-controls {
+            margin-top: 15px;
+        }
+        td {
+            padding: 3px;
+        }
+        th {
+            text-align: left;
+        }
+        .total_row th {
+            text-align: right;
+        }
+        table {
+            width: 640px;
+        }
+        .c-data, .c-user, .c-time {
+            width: 90px;
+        }
+        .logged-user {
+            margin: 20px 0;
+        }
+        .logged-user span {
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
-    <img src="http://www.develer.com/website/images/develer-logo-white-2.png" />
-    <div>
-        Utente: {{ user }}
+    <div id="header">
+        <img src="https://www.develer.com/pics/develer_logo.png" alt="develer" />
     </div>
-    <form method='post' action='showtime.py'>
-        <select name='projectid'>
-        {% for pid, pname in projects.items %}
-            <option value="{{ pid }}" {% ifequal pid selected_project %}selected="selected"{% endifequal %}>{{ pname }}</option>
-        {% endfor %}
-        </select>
-        <br />
-        <select name="month">
-        {% for month in months %}
-            <option value='{{ month.0 }}'{% ifequal month.0 selected_month %} selected{% endifequal %}>{{ month.1 }}</option>
-        {% endfor %}
-        </select>
-        <select name="year">
-        {% for year in years %}
-            <option value='{{ year }}'{% ifequal year selected_year %} selected{% endifequal %}>{{ year }}</option>
-        {% endfor %}
-        </select>
-        <br />
-        <input type='submit' value='Refresh'>
-    </form>
-    {% if show_table %}
-        <table>
-            <tr class="header_row"><th>Data</th><th>Utente</th><th>Descrizione</th><th>Ore</th></tr>
-            {% for hour in hours %}
-            <tr class="{% cycle 'row1' 'row2' %}"><td>{{ hour.date }}</td><td>{{ hour.user }}</td><td>{{ hour.remark }}</td><td>{{ hour.time }}</td></tr>
+    <div class="logged-user"><span>Utente:</span> {{ user }}</div>
+    <form method="get" action="showtime.py">
+        <div>
+            <label for="project">Progetto:</label>
+            <select name="projectid" id="project">
+            {% for pid, pname in projects.items %}
+                <option value="{{ pid }}"{% ifequal pid selected_project %} selected="selected"{% endifequal %}>{{ pname }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="month">Mese:</label>
+            <select name="month" id="month">
+            {% for month in months %}
+                <option value="{{ month.0 }}"{% ifequal month.0 selected_month %} selected="selected"{% endifequal %}>{{ month.1 }}</option>
             {% endfor %}
-            <tr class="total_row"><th colspan=3>Totale</th><td>{{ total_time }}</td></tr>
+            </select>
+            <label for="year">Year:</label>
+            <select name="year" id="year">
+            {% for year in years %}
+                <option value="{{ year }}"{% ifequal year selected_year %} selected="selected"{% endifequal %}>{{ year }}</option>
+            {% endfor %}
+            </select>
+        </div>
+        <div class="form-controls">
+            <input type="submit" name="action" value="Refresh" />
+            <input type="submit" name="action" value="CSV" />        
+        </div>
+    </form>
+    {% if hours %}
+        <table>
+            <tr class="header_row">
+                <th>Data</th>
+                <th>Utente</th>
+                <th>Descrizione</th>
+                <th>Ore</th>
+            </tr>
+            {% for hour in hours %}
+            <tr class="{% cycle "row1" "row2" %}">
+                <td class="c-data">{{ hour.date|date:"d b Y" }}</td>
+                <td class="c-user">{{ hour.user }}</td>
+                <td class="c-remark">{{ hour.remark }}</td>
+                <td class="c-time">{% if hour.time.hours %}{{ hour.time.hours }}h {% endif %}{% if hour.time.minutes %}{{ hour.time.minutes }}m{% endif %}</td>
+            </tr>
+            {% endfor %}
+            <tr class="total_row"><th colspan="3">Totale</th><td>{% if total_time.hours %}{{ total_time.hours }}h {% endif %}{% if total_time.minutes %}{{ total_time.minutes }}m{% endif %}</td></tr>
         </table>
     {% endif %}
 </body>
@@ -327,18 +380,25 @@ def main():
     else:
         selected_project = None
     if 'projectid' in form and 'month' in form and 'year' in form:
-        show_table = True
         selected_month = int(form["month"].value)
         selected_year = int(form["year"].value)
-        from_date = datetime.date(int(form["year"].value), int(form["month"].value), 1)
-        to_date = from_date + datetime.timedelta(days=31)
-        to_date = to_date - datetime.timedelta(days=to_date.day+1)
-        hours, total_time = parseHours(remote.hours(form["projectid"].value,
+        from_date = date(int(form["year"].value), int(form["month"].value), 1)
+        to_date = from_date + timedelta(days=31)
+        to_date = to_date - timedelta(days=to_date.day)
+        hours = parseHours(remote.hours(form["projectid"].value,
             from_date.strftime("%Y-%m-%d"), to_date.strftime("%Y-%m-%d")))
+        
+        total_time = timedelta(seconds = 0)
+        def ctime(t):
+            secs = t.days * 3600 * 24 + t.seconds
+            return { 'hours': secs / 3600, 'minutes': (secs / 60) % 60 }
+        for h in hours:
+            total_time += h['time']
+            h['time'] = ctime(h['time'])
+        total_time = ctime(total_time)
     else:
-        show_table = False
-        selected_month = datetime.date.today().month
-        selected_year = datetime.date.today().year
+        selected_month = date.today().month
+        selected_year = date.today().year
         hours = None
         total_time = None
     tpl = Template(TPL)
@@ -351,7 +411,6 @@ def main():
         'years': YEARS,
         'hours': hours,
         'total_time': total_time,
-        'show_table': show_table,
         'user': USER,
     })
     p(tpl.render(ctx))
