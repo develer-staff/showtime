@@ -73,9 +73,9 @@ ACHIEVOURI = "http://localhost/achievo/"
 #import datetime
 
 def parseProjects(etree):
-    projects = {}
+    projects = []
     for element in etree:
-        projects[element.get("id")] = element.get("name")
+        projects.append(element.get("name"))
     return projects
 
 def parseHours(etree):
@@ -302,8 +302,8 @@ TPL = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3
                 </td>
                 <td>
                     <select name="projectid" id="project">
-                    {% for pid, pname in projects.items %}
-                        <option value="{{ pid }}"{% ifequal pid selected_project %} selected="selected"{% endifequal %}>{{ pname }}</option>
+                    {% for pname in projects %}
+                        <option value="{{ pname }}"{% ifequal pname selected_project %} selected="selected"{% endifequal %}>{{ pname }}</option>
                     {% endfor %}
                     </select>
                 </td>
