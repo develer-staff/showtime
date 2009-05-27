@@ -83,6 +83,7 @@ def parseHours(etree):
     for element in etree:
         hours.append(
             {
+                "project": element.get("project"),
                 "date": datetime.strptime(element.get("date"), "%Y-%m-%d"),
                 "time": timedelta(minutes = int(element.get("time"))),
                 "remark": element.get("remark"),
@@ -210,9 +211,9 @@ class RemoteTimereg:
         projects = self._urlDispatch("report")
         return projects
     
-    def hours(self, projectid, from_date=None, to_date=None):
+    def hours(self, projectids, from_date=None, to_date=None):
         params = {}
-        params["projectid"] = projectid
+        params["projectids"] = projectids
         if from_date:
             params["from_date"] = from_date
         if to_date:
@@ -301,9 +302,9 @@ TPL = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3
                     <label for="project">Progetto:</label>
                 </td>
                 <td>
-                    <select name="projectid" id="project">
+                    <select name="projectids" id="project" multiple>
                     {% for pname in projects %}
-                        <option value="{{ pname }}"{% ifequal pname selected_project %} selected="selected"{% endifequal %}>{{ pname }}</option>
+                        <option value="{{ pname }}"{% ifequal pname selected_projects %} selected="selected"{% endifequal %}>{{ pname }}</option>
                     {% endfor %}
                     </select>
                 </td>
@@ -345,6 +346,7 @@ TPL = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3
     {% if hours %}
         <table class="hours">
             <tr class="header_row">
+                <th>Progetto</th>
                 <th>Data</th>
                 <th>Utente</th>
                 <th>Descrizione</th>
@@ -352,13 +354,14 @@ TPL = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3
             </tr>
             {% for hour in hours %}
             <tr class="{% cycle "row1" "row2" %}">
+                <td class="c-project">{{ hour.project }}</td>
                 <td class="c-data">{{ hour.date|date:"d b Y" }}</td>
                 <td class="c-user">{{ hour.user }}</td>
                 <td class="c-remark">{{ hour.remark }}</td>
                 <td class="c-time">{% if hour.time.hours %}{{ hour.time.hours }}h {% endif %}{% if hour.time.minutes %}{{ hour.time.minutes }}m{% endif %}</td>
             </tr>
             {% endfor %}
-            <tr class="total_row"><th colspan="3">Totale</th><td>{% if total_time.hours %}{{ total_time.hours }}h {% endif %}{% if total_time.minutes %}{{ total_time.minutes }}m{% endif %}</td></tr>
+            <tr class="total_row"><th colspan="4">Totale</th><td>{% if total_time.hours %}{{ total_time.hours }}h {% endif %}{% if total_time.minutes %}{{ total_time.minutes }}m{% endif %}</td></tr>
         </table>
     {% endif %}
 </body>
@@ -407,23 +410,26 @@ def main():
     remote.login(ACHIEVOURI, USER, PASSWORD)
     form = cgi.FieldStorage()
     projects = parseProjects(remote.projects())
-    if 'projectid' in form:
-        selected_project = form['projectid'].value
+    if 'projectids' in form:
+        projectids = form['projectids']
+        if type(projectids) != list:
+            projectids = [projectids]
+        selected_projects = [projectid.value for projectid in projectids]
     else:
-        selected_project = None
+        selected_projects = None
 
-    if 'projectid' in form and 'month' in form and 'year' in form:
+    if 'month' in form and 'year' in form:
         selected_month = int(form["month"].value)
         selected_year = int(form["year"].value)
     else:
         selected_month = date.today().month
         selected_year = date.today().year
-
-    if selected_project and selected_month and selected_year:
+    
+    if selected_projects and selected_month and selected_year:
         from_date = date(selected_year, selected_month, 1)
         to_date = from_date + timedelta(days=31)
         to_date = to_date - timedelta(days=to_date.day)
-        hours = parseHours(remote.hours(form["projectid"].value,
+        hours = parseHours(remote.hours(selected_projects,
             from_date.strftime("%Y-%m-%d"), to_date.strftime("%Y-%m-%d")))
         total_time = timedelta(seconds = 0)
         def ctime(t):
@@ -437,10 +443,10 @@ def main():
         hours = None
         total_time = None
 
-    if 'action' in form and form['action'].value == "CSV":
+    if 'action' in form and form['action'].value == "CSV" and selected_projects:
         string = StringIO.StringIO()
         writer = csv.writer(string)
-        writer.writerow(["Data", "Utente", "Descrizione", "Ore"])
+        writer.writerow(["Progetto", "Data", "Utente", "Descrizione", "Ore"])
         for hour in hours:
             time = ""
             if hour["time"]["hours"] > 0:
@@ -449,16 +455,16 @@ def main():
                 if len(time) > 0:
                     time += " "
                 time += "%dm" % hour["time"]["minutes"]
-            writer.writerow([hour["date"].strftime("%d %b %Y"), hour["user"], hour["remark"], time])
+            writer.writerow([hour["project"], hour["date"].strftime("%d %b %Y"), hour["user"], hour["remark"], time])
         print "Content-Type: text/csv; charset=utf-8"
-        print "Content-Disposition: attachment; filename=\"develer-%s-%s.csv\"" % (projects[selected_project],from_date.strftime("%b-%Y"))
+        print "Content-Disposition: attachment; filename=\"develer-%s-%s.csv\"" % ("-".join(selected_projects),from_date.strftime("%b-%Y"))
         print # blank line, end of headers
         print string.getvalue()
     else:
         tpl = Template(TPL)
         ctx = Context({
             'projects': projects,
-            'selected_project': selected_project,
+            'selected_projects': selected_projects,
             'selected_month': selected_month,
             'selected_year': selected_year,
             'months': MONTHS,
