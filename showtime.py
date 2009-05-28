@@ -455,7 +455,7 @@ def main():
                 if len(time) > 0:
                     time += " "
                 time += "%dm" % hour["time"]["minutes"]
-            writer.writerow([hour["project"], hour["date"].strftime("%d %b %Y"), hour["user"], hour["remark"], time])
+            writer.writerow([hour["project"], hour["date"].strftime("%d %b %Y"), hour["user"], unicode(hour["remark"]).encode("utf-8"), time])
         print "Content-Type: text/csv; charset=utf-8"
         print "Content-Disposition: attachment; filename=\"develer-%s-%s.csv\"" % ("-".join(selected_projects),from_date.strftime("%b-%Y"))
         print # blank line, end of headers
