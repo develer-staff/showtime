@@ -304,7 +304,7 @@ TPL = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3
                 <td>
                     <select name="projectids" id="project" multiple>
                     {% for pname in projects %}
-                        <option value="{{ pname }}"{% ifequal pname selected_projects %} selected="selected"{% endifequal %}>{{ pname }}</option>
+                        <option value="{{ pname.0 }}"{% if pname.1 %} selected="selected"{% endif %}>{{ pname.0 }}</option>
                     {% endfor %}
                     </select>
                 </td>
@@ -461,10 +461,13 @@ def main():
         print # blank line, end of headers
         print string.getvalue()
     else:
+        if selected_projects:
+            projects = [(project, project in selected_projects) for project in projects]
+        else:
+            projects = [(project, False) for project in projects]
         tpl = Template(TPL)
         ctx = Context({
             'projects': projects,
-            'selected_projects': selected_projects,
             'selected_month': selected_month,
             'selected_year': selected_year,
             'months': MONTHS,
