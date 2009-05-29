@@ -12,6 +12,8 @@
 from datetime import datetime, date, timedelta
 import base64
 
+## HTTPError
+from urllib2 import HTTPError
 
 ## CGI modules
 import os
@@ -274,13 +276,16 @@ TPL = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3
             background-color: #f4a460
         }
         table.hours {
-            width: 640px;
+            width: 800px;
         }
         .c-data {
-            width: 8em
+            width: 6em;
         }
         .c-user, .c-time {
             width: 90px;
+        }
+        .c-remark {
+            width: 400px;
         }
         .logged-user {
             font-weight: bold;
@@ -407,7 +412,14 @@ def main():
         
     settings.configure(TEMPLATE_DEBUG = True)
     remote = RemoteTimereg()
-    remote.login(ACHIEVOURI, USER, PASSWORD)
+    try:
+        remote.login(ACHIEVOURI, USER, PASSWORD)
+    except HTTPError:
+        print "Content-Type: text/html; charset=utf-8"
+        print # blank line, end of headers
+        p(u"Errore nell'autenticazione, contattare l'amministratore di sistema.")
+        return
+        
     form = cgi.FieldStorage()
     projects = parseProjects(remote.projects())
     if 'projectids' in form:
