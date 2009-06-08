@@ -348,6 +348,9 @@ TPL = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3
             </tr>
         </table>
     </form>
+    {% if none_selected %}
+        <p>Selezionare almeno un progetto</p>
+    {% endif %}
     {% if hours %}
         <table class="hours">
             <tr class="header_row">
@@ -475,8 +478,10 @@ def main():
     else:
         if selected_projects:
             projects = [(project, project in selected_projects) for project in projects]
+            none_selected = False
         else:
             projects = [(project, False) for project in projects]
+            none_selected = True
         tpl = Template(TPL)
         ctx = Context({
             'projects': projects,
@@ -486,6 +491,7 @@ def main():
             'years': YEARS,
             'hours': hours,
             'total_time': total_time,
+            'none_selected': none_selected,
             'user': USER,
         })
         print "Content-Type: text/html; charset=utf-8"
