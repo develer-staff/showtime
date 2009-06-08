@@ -349,7 +349,7 @@ TPL = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3
         </table>
     </form>
     {% if none_selected %}
-        <p>Selezionare almeno un progetto</p>
+        <p>Nessun progetto selezionato</p>
     {% endif %}
     {% if hours %}
         <table class="hours">
