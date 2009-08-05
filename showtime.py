@@ -8,6 +8,7 @@
 #
 # Author: Lorenzo Berni <duplo@develer.com>
 #
+DEPLOY_MODE = True
 
 from datetime import datetime, date, timedelta
 import base64
@@ -19,7 +20,8 @@ from urllib2 import HTTPError
 import os
 import cgi
 import cgitb
-cgitb.enable()
+if not DEPLOY_MODE:
+    cgitb.enable()
 
 ## Django modules needed for the template
 from django.conf import settings
@@ -195,8 +197,11 @@ class RemoteTimereg:
         try:
             return ET.fromstring(page)
         except ExpatError:
-            print page.decode(ACHIEVO_ENCODING)
-            raise ExpatError, page.decode(ACHIEVO_ENCODING)
+            if not DEPLOY_MODE:
+                print "Content-Type: text/html; charset=utf-8"
+                print # blank line, end of headers
+                print page.decode(ACHIEVO_ENCODING)
+            raise
 
     def whoami(self):
         """
