@@ -60,7 +60,7 @@ YEARS = (
     2009,
 )
 
-ACHIEVOURI = "http://localhost/achievo/"
+ACHIEVOURI = "https://www.develer.com/groupware/"
 
 ########################################
 
@@ -296,7 +296,7 @@ TPL = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3
     <div id="header">
         <img src="https://www.develer.com/pics/develer_logo.png" alt="develer" />
     </div>
-    <form method="get" action="showtime.py">
+    <form method="get" action="">
         <table>
             <tr>
                 <td class="logged-user">Utente:</td>
@@ -405,7 +405,8 @@ def main():
     except KeyError:
         print "Content-Type: text/html; charset=utf-8"
         print # blank line, end of headers
-        p(u"Il web server non è configurato correttamente. Propagare le informazioni di autenticazione nella variabile HTTP_CGI_AUTH")
+        p(u"Il web server non è configurato correttamente. Propagare le informazioni di autenticazione nella variabile HTTP_CGI_AUTH. ")
+        p(u"In alternativa, verificare che l'URL corrente richieda l'autenticazione.")
         return
     except ValueError:
         print "Content-Type: text/html; charset=utf-8"
