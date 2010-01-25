@@ -54,14 +54,7 @@ MONTHS = (
     (12, "Dicembre"),
 )
 
-YEARS = (
-    2005,
-    2006,
-    2007,
-    2008,
-    2009,
-)
-
+YEARS = range(2005, date.today().year+1)
 ACHIEVOURI = "https://www.develer.com/groupware/"
 
 ########################################
