@@ -55,7 +55,9 @@ MONTHS = (
 )
 
 YEARS = range(2005, date.today().year+1)
-ACHIEVOURI = "https://www.develer.com/groupware/"
+#aleph: accessing achievo via localhost, with basic-auth only for showtime
+#ACHIEVOURI = "https://groupware.develer.com/"
+ACHIEVOURI = "http://groupware/"
 
 ########################################
 
