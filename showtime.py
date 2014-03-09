@@ -360,6 +360,7 @@ TPL = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3
         <table class="hours">
             <tr class="header_row">
                 <th>Progetto</th>
+                <th>Fase</th>
                 <th>Data</th>
                 <th>Utente</th>
                 <th>Descrizione</th>
@@ -368,6 +369,7 @@ TPL = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3
             {% for hour in hours %}
             <tr class="{% cycle "row1" "row2" %}">
                 <td class="c-project">{{ hour.project }}</td>
+                <td class="c-phase">{{ hour.phase }}</td>
                 <td class="c-data">{{ hour.date|date:"d b Y" }}</td>
                 <td class="c-user">{{ hour.user }}</td>
                 <td class="c-remark">{{ hour.remark }}</td>
@@ -482,7 +484,7 @@ def main():
     if 'action' in form and form['action'].value == "CSV" and selected_projects:
         string = StringIO.StringIO()
         writer = csv.writer(string)
-        writer.writerow(["Progetto", "Data", "Utente", "Descrizione", "Ore"])
+        writer.writerow(["Progetto", "Fase", "Data", "Utente", "Descrizione", "Ore"])
         for hour in hours:
             time = ""
             if hour["time"]["hours"] > 0:
@@ -491,7 +493,7 @@ def main():
                 if len(time) > 0:
                     time += " "
                 time += "%dm" % hour["time"]["minutes"]
-            writer.writerow([hour["project"], hour["date"].strftime("%d %b %Y"), hour["user"], unicode(hour["remark"]).encode("utf-8"), time])
+            writer.writerow([hour["project"], hour["phase"], hour["date"].strftime("%d %b %Y"), hour["user"], unicode(hour["remark"]).encode("utf-8"), time])
         print "Content-Type: text/csv; charset=utf-8"
         print "Content-Disposition: attachment; filename=\"develer-%s-%s.csv\"" % ("-".join(selected_projects),from_date.strftime("%b-%Y"))
         print # blank line, end of headers
