@@ -108,6 +108,9 @@ import urllib, urllib2, urlparse
 
 ACHIEVO_ENCODING = "ISO-8859-15"
 
+class AccessDenied(Exception):
+    pass
+
 class RemoteTimereg:
     """
     RemoteTimereg si interfaccia (in modo sincrono) con il modulo Achievo "remote".
@@ -196,6 +199,8 @@ class RemoteTimereg:
                 print "Content-Type: text/html; charset=utf-8"
                 print # blank line, end of headers
                 print page.decode(ACHIEVO_ENCODING)
+            elif 'Access denied' in page:
+                raise AccessDenied()
             raise
 
     def whoami(self):
@@ -418,10 +423,25 @@ def main():
     remote = RemoteTimereg()
     try:
         remote.login(ACHIEVOURI, USER, PASSWORD)
+    except AccessDenied:
+        print "Content-Type: text/html; charset=utf-8"
+        print # blank line, end of headers
+        p(u"Impossibile accedere ad Achievo (Access Denied)")
+        return
     except HTTPError:
         print "Content-Type: text/html; charset=utf-8"
         print # blank line, end of headers
         p(u"Errore nell'autenticazione, contattare l'amministratore di sistema.")
+        return
+    except Exception, e:
+        print "Content-Type: text/html; charset=utf-8"
+        print # blank line, end of headers
+        p(u"Errore nell'autenticazione, contattare l'amministratore di sistema: %s." % str(e))
+        import Cookie
+        cookies = Cookie.SimpleCookie()
+        cookies.load(os.environ["HTTP_COOKIE"])
+        for c in cookies:
+            print c
         return
         
     form = cgi.FieldStorage()
